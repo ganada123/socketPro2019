@@ -19,6 +19,7 @@ int main()
 	int sendBufferLen;
 	char rcvBuffer[BUFSIZE]={};
 	int rcvBufferLen;
+	FILE* fp;
 
 	char* ptr;
 	char tok1[BUFSIZE/2];
@@ -74,6 +75,22 @@ int main()
 				sprintf(sendBuffer,"%d",strcmp(tok1,tok2));
 				sendBufferLen=strlen(sendBuffer);
 				write(c_socket,sendBuffer,sendBufferLen);
+			}
+			else if(!(strncmp(rcvBuffer,"readfile",8)))
+			{
+				fp=fopen(rcvBuffer + 9, "r");
+				while(fgets(sendBuffer,sizeof(sendBuffer),fp))
+				{
+					sendBufferLen=strlen(sendBuffer);
+					write(c_socket, sendBuffer, sendBufferLen);
+				}
+				
+			}
+			else if(!(strncmp(rcvBuffer,"exec",4)))
+			{
+				system(rcvBuffer+5)
+				sendBufferLen=strlen(sendBuffer);
+				write(c_socket, sendBuffer, sendBufferLen);
 			}
 			else if(!(strcmp(rcvBuffer,"안녕하세요")))
 			{
