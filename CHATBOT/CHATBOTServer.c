@@ -6,7 +6,7 @@
 #define PORT 11000
 #define BUFSIZE 100
 
-char buffer[100] ="CHAT BOT";
+char buffer[100] ={};
 
 int main()
 {
@@ -52,12 +52,13 @@ int main()
 		printf("클라이언트 접속 허용\n");
 
 		n=strlen(buffer);
-		write(c_socket, buffer, n);
+		//write(c_socket, buffer, n);
 		while(strcmp(rcvBuffer,"quit"))
 		{		
 			n=read(c_socket,rcvBuffer,sizeof(rcvBuffer));
 			rcvBuffer[n-1]='\0';
-			
+			memset(sendBuffer,0,BUFSIZE);
+
 			if(!(strncmp(rcvBuffer,"strlen",6)))
 			{
 				sprintf(sendBuffer,"%d",strlen(rcvBuffer)-7);
@@ -79,18 +80,39 @@ int main()
 			else if(!(strncmp(rcvBuffer,"readfile",8)))
 			{
 				fp=fopen(rcvBuffer + 9, "r");
-				while(fgets(sendBuffer,sizeof(sendBuffer),fp))
+				if(fp)
 				{
+					char tmpBuffer[BUFSIZE]={};
+					while(fgets(tmpBuffer,sizeof(tmpBuffer),fp))
+					{
+						strcat(sendBuffer,tmpBuffer);
+					}
 					sendBufferLen=strlen(sendBuffer);
 					write(c_socket, sendBuffer, sendBufferLen);
 				}
-				
+				else
+				{
+						strcpy(sendBuffer,"그런 파일이 존재하지 않아요!");
+						sendBufferLen=strlen(sendBuffer);
+						write(c_socket, sendBuffer, sendBufferLen);
+				}
+				fclose(fp);
 			}
 			else if(!(strncmp(rcvBuffer,"exec",4)))
-			{
-				system(rcvBuffer+5)
+			{			
+				char tmpBuffer[BUFSIZE]={};
+				sprintf(buffer,"%s > buffer.txt",rcvBuffer+5);
+				printf("%s\n",buffer);
+				system(buffer);
+				fp=fopen("buffer.txt","r");
+				while(fgets(tmpBuffer,sizeof(tmpBuffer),fp))
+				{
+					strcat(sendBuffer,tmpBuffer);
+				}
 				sendBufferLen=strlen(sendBuffer);
 				write(c_socket, sendBuffer, sendBufferLen);
+				fclose(fp);
+
 			}
 			else if(!(strcmp(rcvBuffer,"안녕하세요")))
 			{

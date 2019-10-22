@@ -29,15 +29,15 @@ int main()
 		close(c_socket);
 		return -1;	
 	}
-	
+/*	
 	n = read(c_socket, rcvBuffer, sizeof(rcvBuffer));
 	if(n<0)
 	{
 		printf("Read Failed\n");
 		return -1;
 	}
-	printf("received data : %s\n", rcvBuffer);
-
+	printf("I am %s\n", rcvBuffer);
+*/
 	while(strcmp(sendBuffer,"quit"))
 	{
 		printf("외톨이 : ");
