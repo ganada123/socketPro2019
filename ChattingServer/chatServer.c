@@ -19,6 +19,7 @@ char    escape[ ] = "exit";
 char    greeting[ ] = "Welcome to chatting room\n";
 char    CODE200[ ] = "Sorry No More Connection\n";
 char	usernick[MAX_CLIENT][20];
+char	rcvBuffer[100]="";
 int main(int argc, char *argv[ ])
 {
     int c_socket, s_socket;
@@ -48,6 +49,15 @@ int main(int argc, char *argv[ ])
     while(1) {
 		len = sizeof(c_addr);
 		c_socket = accept(s_socket, (struct sockaddr *) &c_addr, &len);
+		read(c_socket,rcvBuffer,sizeof(rcvBuffer));
+		for(i=0;i<MAX_CLIENT;i++)
+		{
+			if(list_c[i]==INVALID_SOCK)
+			{
+				strcpy(usernick[i],rcvBuffer);
+				break;
+			}
+		}
 		res = pushClient(c_socket);
 		if(res < 0) { //MAX_CLIENT만큼 이미 클라이언트가 접속해 있다면,
 			write(c_socket, CODE200, strlen(CODE200));
@@ -68,7 +78,7 @@ void *do_chat(void *arg)
 		memset(chatData, 0, sizeof(chatData));
 		if((n = read(c_socket, chatData, sizeof(chatData))) > 0) 
 		{
-			if(strcmp(chatData, escape) != 0) 
+			if(!(strcmp(chatData, escape))) 
 			{
 				popClient(c_socket);
 				break;
@@ -77,7 +87,6 @@ void *do_chat(void *arg)
 			{
 				for(i=0;i<MAX_CLIENT;i++)
 				{
-						printf("sex");
 					if(list_c[i]!=INVALID_SOCK)
 					{
 						write(list_c[i],chatData,strlen(chatData));
@@ -94,9 +103,9 @@ int pushClient(int c_socket) {
 	{	
 		if(list_c[i]==INVALID_SOCK)
 		{
-			read(c_socket,usernick[i],sizeof(usernick[i]));
-			pthread_create(&thread,NULL,do_chat,(void*)(&c_socket));
+			printf("%s",usernick[i]);
 			list_c[i]=c_socket;
+			pthread_create(&thread,NULL,do_chat,(void*)(&c_socket));
 			return i;
 		}
 	}
@@ -114,7 +123,7 @@ int popClient(int c_socket)
 		if(list_c[i]==c_socket)
 		{
 			list_c[i]=INVALID_SOCK;
-			strcpy(usernick[i],"");
+			strcpy(usernick[i],NULL);
 		}
 	}
 }

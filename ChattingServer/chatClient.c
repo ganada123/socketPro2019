@@ -38,7 +38,6 @@ int main(int argc, char *argv[ ])
 		printf("Can not connect\n");
 		return -1;
 	}
-	write(c_socket,nickname,strlen(nickname));
 	//pthread_create with do_send_chat function
 	pthread_create(&thread_1,NULL,do_send_chat,(void*)(&c_socket));
 	//pthread_create with do_receive_chat function
@@ -54,6 +53,7 @@ void * do_send_chat(void *arg)
     char buf[CHATDATA];
     int n;
     int c_socket = *((int *) arg);        // client socket
+	write(c_socket,nickname,strlen(nickname));
     while(1) {
         memset(buf, 0, sizeof(buf));
         if((n = read(0, buf, sizeof(buf))) > 0 ) { //키보드에서 입력 받은 문자열을 buf에 저장. read()함수의 첫번째 인자는 file descriptor로써, 0은 stdin, 즉 키보드를 의미함.
