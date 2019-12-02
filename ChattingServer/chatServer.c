@@ -18,6 +18,7 @@ int    list_c[MAX_CLIENT];
 char    escape[ ] = "exit";
 char    greeting[ ] = "Welcome to chatting room\n";
 char    CODE200[ ] = "Sorry No More Connection\n";
+char	usernick[MAX_CLIENT][20];
 int main(int argc, char *argv[ ])
 {
     int c_socket, s_socket;
@@ -52,40 +53,66 @@ int main(int argc, char *argv[ ])
             write(c_socket, CODE200, strlen(CODE200));
             close(c_socket);
         } else {
-            write(c_socket, greeting, strlen(greeting));
-            //pthread_create with do_chat function.
+			write(c_socket, greeting, strlen(greeting));
         }
     }
 }
+
 void *do_chat(void *arg)
 {
     int c_socket = *((int *)arg);
     char chatData[CHATDATA];
     int i, n;
-    while(1) {
-        memset(chatData, 0, sizeof(chatData));
-        if((n = read(c_socket, chatData, sizeof(chatData))) > 0) {
-            //write chatData to all clients
-            //
-            ///////////////////////////////
-            if(strstr(chatData, escape) != NULL) {
-                popClient(c_socket);
-                break;
-            }
-        }
-    }
+    while(1) 
+	{
+		memset(chatData, 0, sizeof(chatData));
+		if((n = read(c_socket, chatData, sizeof(chatData))) > 0) 
+		{
+			if(strcmp(chatData, escape) != 0) 
+			{
+				popClient(c_socket);
+				break;
+			}
+			else
+			{
+				for(i=0;i<MAX_CLIENT;i++)
+				{
+					if(list_c[i]!=INVALID_SOCK)
+					{
+						write(list_c[i],chatData,strlen(chatData));
+					}
+				}
+			}
+		}
+	}
 }
 int pushClient(int c_socket) {
+	int i;
     //ADD c_socket to list_c array.
-    //
-    ///////////////////////////////
+	for(i=0; i<MAX_CLIENT;i++)
+	{	
+		if(list_c[i]==INVALID_SOCK)
+		{
+			pthread_create(&thread,NULL,do_chat,(void*)(&c_socket));
+			list_c[i]=c_socket;
+			return i;
+		}
+	}
     //return -1, if list_c is full.
     //return the index of list_c which c_socket is added.
+	return -1;
 }
 int popClient(int c_socket)
 {
+	int i;
     close(c_socket);
     //REMOVE c_socket from list_c array.
-    //
-    ///////////////////////////////////
+	for(i=0;i<MAX_CLIENT;i++)
+	{
+		if(list_c[i]==c_socket)
+		{
+			list_c[i]=INVALID_SOCK;
+			strcpy(usernick[i],"");
+		}
+	}
 }
