@@ -15,7 +15,7 @@ pthread_mutex_t mutex;
 #define INVALID_SOCK -1
 #define PORT 9000
 int    list_c[MAX_CLIENT];
-char    escape[ ] = "exit";
+char    escape[ ] = "exit\n";
 char    greeting[ ] = "Welcome to chatting room\n";
 char    CODE200[ ] = "Sorry No More Connection\n";
 char	usernick[MAX_CLIENT][20];
@@ -99,11 +99,14 @@ void *do_chat(void *arg)
 int pushClient(int c_socket) {
 	int i;
     //ADD c_socket to list_c array.
+	for(i=0;i<MAX_CLIENT;i++)
+	{
+		printf("%d : %d,%s\n",i,list_c[i],usernick[i]);
+	}
 	for(i=0; i<MAX_CLIENT;i++)
 	{	
 		if(list_c[i]==INVALID_SOCK)
 		{
-			printf("%s",usernick[i]);
 			list_c[i]=c_socket;
 			pthread_create(&thread,NULL,do_chat,(void*)(&c_socket));
 			return i;
@@ -116,14 +119,15 @@ int pushClient(int c_socket) {
 int popClient(int c_socket)
 {
 	int i;
-    close(c_socket);
-    //REMOVE c_socket from list_c array.
+	printf("pop start\n");
 	for(i=0;i<MAX_CLIENT;i++)
 	{
 		if(list_c[i]==c_socket)
 		{
 			list_c[i]=INVALID_SOCK;
-			strcpy(usernick[i],NULL);
+			memset(&usernick[i],0,sizeof(usernick[i]));
 		}
 	}
+    close(c_socket);
+    //REMOVE c_socket from list_c array.
 }
