@@ -46,14 +46,14 @@ int main(int argc, char *argv[ ])
     for(i = 0; i < MAX_CLIENT; i++)
         list_c[i] = INVALID_SOCK;
     while(1) {
-        len = sizeof(c_addr);
-        c_socket = accept(s_socket, (struct sockaddr *) &c_addr, &len);
-        res = pushClient(c_socket);
-        if(res < 0) { //MAX_CLIENT만큼 이미 클라이언트가 접속해 있다면,
-            write(c_socket, CODE200, strlen(CODE200));
-            close(c_socket);
-        } else {
-			write(c_socket, greeting, strlen(greeting));
+		len = sizeof(c_addr);
+		c_socket = accept(s_socket, (struct sockaddr *) &c_addr, &len);
+		res = pushClient(c_socket);
+		if(res < 0) { //MAX_CLIENT만큼 이미 클라이언트가 접속해 있다면,
+			write(c_socket, CODE200, strlen(CODE200));
+			close(c_socket);
+		} else {
+				write(c_socket, greeting, strlen(greeting));
         }
     }
 }
@@ -77,6 +77,7 @@ void *do_chat(void *arg)
 			{
 				for(i=0;i<MAX_CLIENT;i++)
 				{
+						printf("sex");
 					if(list_c[i]!=INVALID_SOCK)
 					{
 						write(list_c[i],chatData,strlen(chatData));
@@ -93,6 +94,7 @@ int pushClient(int c_socket) {
 	{	
 		if(list_c[i]==INVALID_SOCK)
 		{
+			read(c_socket,usernick[i],sizeof(usernick[i]));
 			pthread_create(&thread,NULL,do_chat,(void*)(&c_socket));
 			list_c[i]=c_socket;
 			return i;
