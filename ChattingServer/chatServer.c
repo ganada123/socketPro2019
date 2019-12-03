@@ -68,7 +68,7 @@ int main(int argc, char *argv[ ])
 				break;
 			}
 		}
-		res = pushClient(c_socket);   // Here    //+channel
+		res = pushClient(c_socket,channel);
 		if(res < 0) 
 		{ //MAX_CLIENT만큼 이미 클라이언트가 접속해 있다면,
 			write(c_socket, CODE200, strlen(CODE200));
@@ -81,9 +81,11 @@ int main(int argc, char *argv[ ])
 	}
 }
 
-void *do_chat(void *arg)
+void *do_chat(void *arg, void *num)
 {
 	int c_socket = *((int *)arg);
+	int channel=*((int *)num);
+
 	char chatData[CHATDATA];
 	char sndBuf[CHATDATA];
 	int i, n;
@@ -98,7 +100,7 @@ void *do_chat(void *arg)
 		{
 			if(!(strcmp(chatData, escape)))
 			{
-				popClient(c_socket);
+				popClient(c_socket,channel);
 				break;
 			}
 			else if(strstr(chatData, whisper)!=NULL)
@@ -108,14 +110,15 @@ void *do_chat(void *arg)
 				ptrsnd=strtok(chatData," ");
 				strtok(NULL," ");
 				ptrrcv=strtok(NULL," ");
+				pritnf("<ch%d>",channel);
 				sprintf(sndBuf,"[w][%s] %s",ptrsnd,strtok(NULL,""));
 				//&ptrrcv[strlen(ptrrcv)+1]
 //				printf("%s\n",chatData);
 				for(i=0;i<MAX_CLIENT;i++)
 				{
-					if(!(strcmp(usernick[i],ptrrcv)))
+					if(!(strcmp(usernick[channel][i],ptrrcv)))
 					{
-						write(list_c[i],sndBuf,strlen(sndBuf));
+						write(list_c[channel][i],sndBuf,strlen(sndBuf));
 						exist=1;
 						break;
 					}
@@ -130,27 +133,28 @@ void *do_chat(void *arg)
 			{
 				for(i=0;i<MAX_CLIENT;i++)
 				{
-					if(list_c[i]!=INVALID_SOCK)
+					if(list_c[channel][i]!=INVALID_SOCK)
 					{
-						write(list_c[i],chatData,strlen(chatData));
+						sprintf(sndBuf,"<ch%d>%s",channel,chatData);
+						write(list_c[i],sndBuf,strlen(sndBuf));
 					}
 				}
 			}
 		}
 	}
 }
-int pushClient(int c_socket) {
+int pushClient(int c_socket,int channel) {
 	int i;
     //ADD c_socket to list_c array.
 	for(i=0;i<MAX_CLIENT;i++)
 	{
-		printf("%d : %d,%s\n",i,list_c[i],usernick[i]);
+		printf("%d : %d,%s\n",i,list_c[channel][i],usernick[channel][i]);
 	}
 	for(i=0; i<MAX_CLIENT;i++)
 	{	
-		if(list_c[i]==INVALID_SOCK)
+		if(list_c[channel][i]==INVALID_SOCK)
 		{
-			list_c[i]=c_socket;
+			list_c[channel][i]=c_socket;
 			pthread_create(&thread,NULL,do_chat,(void*)(&c_socket));
 			return i;
 		}
@@ -159,15 +163,15 @@ int pushClient(int c_socket) {
     //return the index of list_c which c_socket is added.
 	return -1;
 }
-int popClient(int c_socket)
+int popClient(int c_socket,int channel)
 {
 	int i;
 	for(i=0;i<MAX_CLIENT;i++)
 	{
-		if(list_c[i]==c_socket)
+		if(list_c[channel][i]==c_socket)
 		{
-			list_c[i]=INVALID_SOCK;
-			memset(&usernick[i],0,sizeof(usernick[i]));
+			list_c[channel][i]=INVALID_SOCK;
+			memset(&usernick[channel][i],0,sizeof(usernick[channel][i]));
 		}
 	}
     close(c_socket);
