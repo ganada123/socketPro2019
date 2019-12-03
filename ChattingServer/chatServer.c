@@ -73,6 +73,7 @@ void *do_chat(void *arg)
 {
 	int c_socket = *((int *)arg);
 	char chatData[CHATDATA];
+	char sndBuf[CHATDATA];
 	int i, n;
 	char *ptrsnd;
 	char *ptrrcv;
@@ -90,26 +91,26 @@ void *do_chat(void *arg)
 			}
 			else if(strstr(chatData, whisper)!=NULL)
 			{	//chatData == "nickname /w receiver lalalalala"
-				//chatData ==  ptrnick  2tok  3tok    4tok
+				//chatData ==  ptrsnd  2tok  ptrrcv  4tok
 				exist=0;
 				ptrsnd=strtok(chatData," ");
 				strtok(NULL," ");
 				ptrrcv=strtok(NULL," ");
-				
-				sprintf(chatData,"[w][%s] %s",*ptrsnd,ptrrcv[strlen(ptrrcv)+1]);
-				printf("%s",chatData);
+				sprintf(sndBuf,"[w][%s] %s",ptrsnd,strtok(NULL,""));
+				//&ptrrcv[strlen(ptrrcv)+1]
+//				printf("%s\n",chatData);
 				for(i=0;i<MAX_CLIENT;i++)
 				{
 					if(!(strcmp(usernick[i],ptrrcv)))
 					{
-						write(list_c[i],chatData,strlen(chatData));
+						write(list_c[i],sndBuf,strlen(sndBuf));
 						exist=1;
 						break;
 					}
 				}
 				if(exist==0)
 				{
-					strcpy(chatData,"can`t found user");
+					strcpy(chatData,"Not exist\n");
 					write(c_socket,chatData,strlen(chatData));
 				}
 			}
