@@ -14,6 +14,7 @@ void *do_send_chat(void *);
 void *do_receive_chat(void *);
 pthread_t thread_1, thread_2;
 char    escape[ ] = "exit\n";
+char	whisper[ ] = "/w";
 char    nickname[20];
 int main(int argc, char *argv[ ])
 {
@@ -61,9 +62,15 @@ void * do_send_chat(void *arg)
 		{     //키보드에서 입력 받은 문자열을 buf에 저장. read()함수의 첫번째 인자는 file descriptor로써, 0은 stdin, 즉 키보드를 의미함.
 			if(!strcmp(buf, escape)) 
 			{ //'exit' 메세지를 입력하면,
-				write(c_socket, chatData, strlen(chatData)); //서버로 채팅 메시지 전달
+				write(c_socket, buf, strlen(buf)); //서버로 채팅 메시지 전달
 				pthread_kill(thread_2, SIGINT); //do_receive_chat 스레드를 종료시킴
 				break; //자신도 종료
+			}
+			else if(!strncmp(buf, whisper,strlen(whisper)))
+			{
+				sprintf(chatData,"%s %s",nickname,buf);
+				//     nickname /w receiver lalala
+				write(c_socket, chatData, strlen(chatData));
 			}
 			else
 			{

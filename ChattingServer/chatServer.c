@@ -16,6 +16,7 @@ pthread_mutex_t mutex;
 #define PORT 9000
 int    list_c[MAX_CLIENT];
 char    escape[ ] = "exit\n";
+char	whisper[ ] = "/w";
 char    greeting[ ] = "Welcome to chatting room\n";
 char    CODE200[ ] = "Sorry No More Connection\n";
 char	usernick[MAX_CLIENT][20];
@@ -70,18 +71,47 @@ int main(int argc, char *argv[ ])
 
 void *do_chat(void *arg)
 {
-    int c_socket = *((int *)arg);
-    char chatData[CHATDATA];
-    int i, n;
+	int c_socket = *((int *)arg);
+	char chatData[CHATDATA];
+	int i, n;
+	char *ptrsnd;
+	char *ptrrcv;
+	char tok1[20], tok2[20];
+	int exist=0;
     while(1) 
 	{
 		memset(chatData, 0, sizeof(chatData));
 		if((n = read(c_socket, chatData, sizeof(chatData))) > 0) 
 		{
-			if(!(strcmp(chatData, escape))) 
+			if(!(strcmp(chatData, escape)))
 			{
 				popClient(c_socket);
 				break;
+			}
+			else if(strstr(chatData, whisper)!=NULL)
+			{	//chatData == "nickname /w receiver lalalalala"
+				//chatData ==  ptrnick  2tok  3tok    4tok
+				exist=0;
+				ptrsnd=strtok(chatData," ");
+				strtok(NULL," ");
+				ptrrcv=strtok(NULL," ");
+				
+				sprintf(chatData,"[w][%s] %s",*ptrsnd,ptrrcv[strlen(ptrrcv)+1]);
+				printf("%s",chatData);
+				for(i=0;i<MAX_CLIENT;i++)
+				{
+					if(!(strcmp(usernick[i],ptrrcv)))
+					{
+						write(list_c[i],chatData,strlen(chatData));
+						exist=1;
+						break;
+					}
+				}
+				if(exist==0)
+				{
+					strcpy(chatData,"can`t found user");
+					write(c_socket,chatData,strlen(chatData));
+				}
 			}
 			else
 			{
@@ -119,7 +149,6 @@ int pushClient(int c_socket) {
 int popClient(int c_socket)
 {
 	int i;
-	printf("pop start\n");
 	for(i=0;i<MAX_CLIENT;i++)
 	{
 		if(list_c[i]==c_socket)
