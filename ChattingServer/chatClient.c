@@ -16,6 +16,7 @@ pthread_t thread_1, thread_2;
 char    escape[ ] = "exit\n";
 char	whisper[ ] = "/w";
 char    nickname[20];
+int	channel;
 int main(int argc, char *argv[ ])
 {
 	int c_socket;
@@ -34,6 +35,8 @@ int main(int argc, char *argv[ ])
 	c_addr.sin_port = htons(PORT);
 	printf("Input Nickname : ");
 	scanf("%s", nickname);
+	printf("Select Channel(1~3)");
+	scanf("%d",&channel);
 	if(connect(c_socket, (struct sockaddr *) &c_addr, sizeof(c_addr)) == -1) 
 	{
 		printf("Can not connect\n");
@@ -55,6 +58,7 @@ void * do_send_chat(void *arg)
     int n;
     int c_socket = *((int *) arg);        // client socket
 	write(c_socket,nickname,strlen(nickname));
+	write(c_socket,channel,strlen(channel));     //Here //+channel
 	while(1) 
 	{
 		memset(buf, 0, sizeof(buf));

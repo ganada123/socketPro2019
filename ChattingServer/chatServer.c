@@ -11,15 +11,16 @@ int popClient(int); //클라이언트가 종료했을 때 클라이언트 정보
 pthread_t thread;
 pthread_mutex_t mutex;
 #define MAX_CLIENT 10
+#define MAX_CHANNEL 3
 #define CHATDATA 1024
 #define INVALID_SOCK -1
 #define PORT 9000
-int    list_c[MAX_CLIENT];
+int    list_c[MAX_CHANNEL][MAX_CLIENT];
 char    escape[ ] = "exit\n";
 char	whisper[ ] = "/w";
 char    greeting[ ] = "Welcome to chatting room\n";
 char    CODE200[ ] = "Sorry No More Connection\n";
-char	usernick[MAX_CLIENT][20];
+char	usernick[MAX_CHANNEL][MAX_CLIENT][20];
 char	rcvBuffer[100]="";
 int main(int argc, char *argv[ ])
 {
@@ -27,6 +28,7 @@ int main(int argc, char *argv[ ])
     struct sockaddr_in s_addr, c_addr;
     int    len;
     int    i, j, n;
+	int channel;
     int    res;
     if(pthread_mutex_init(&mutex, NULL) != 0) {
         printf("Can not create mutex\n");
@@ -45,28 +47,38 @@ int main(int argc, char *argv[ ])
         printf("listen Fail\n");
         return -1;
     }
-    for(i = 0; i < MAX_CLIENT; i++)
-        list_c[i] = INVALID_SOCK;
-    while(1) {
+	for(j=0;j<MAX_CHANNEL;j++)
+	{
+		for(i = 0; i < MAX_CLIENT; i++)
+		{
+			list_c[j][i] = INVALID_SOCK;
+		}
+	}
+    while(1) 
+	{
 		len = sizeof(c_addr);
 		c_socket = accept(s_socket, (struct sockaddr *) &c_addr, &len);
 		read(c_socket,rcvBuffer,sizeof(rcvBuffer));
+		read(c_socket,channel,sizeof(channel));
 		for(i=0;i<MAX_CLIENT;i++)
 		{
-			if(list_c[i]==INVALID_SOCK)
+			if(list_c[channel][i]==INVALID_SOCK)
 			{
-				strcpy(usernick[i],rcvBuffer);
+				strcpy(usernick[channel][i],rcvBuffer);
 				break;
 			}
 		}
-		res = pushClient(c_socket);
-		if(res < 0) { //MAX_CLIENT만큼 이미 클라이언트가 접속해 있다면,
+		res = pushClient(c_socket);   // Here    //+channel
+		if(res < 0) 
+		{ //MAX_CLIENT만큼 이미 클라이언트가 접속해 있다면,
 			write(c_socket, CODE200, strlen(CODE200));
 			close(c_socket);
-		} else {
+		} 
+		else 
+		{
 				write(c_socket, greeting, strlen(greeting));
-        }
-    }
+		}
+	}
 }
 
 void *do_chat(void *arg)
